@@ -102,7 +102,6 @@ print(f"Searching best match for Nolli names:")
 counter = 0  # To track the number of successful matches
 osm_features = osm_data["features"]
 for nolli_id, values in nolli_relevant_data.items():
-    print(f"\t{nolli_id}\t{values['nolli_names'][0]}")  # Print first name for reference
 
     names = values['nolli_names']
     # Get the best match from OSM data

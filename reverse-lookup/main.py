@@ -1,5 +1,4 @@
 from utils import extract_files, load_data, save_to_json, print_dict, find_closest_matches, convert_to_geojson
-
 ###############################
 # 1) Define the input files
 ###############################
@@ -10,7 +9,7 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 #
 # Define the filename of the GeoJSON file containing previous results.
 
-# input_geojson_file = "..."
+input_geojson_file = "/workspaces/geographic-coordinates-match-HultzHubbard/reverse-lookup/matched_nolli_features.geojson"
 
 ###############################
 # 2) Load the GeoJSON data
@@ -18,7 +17,7 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 # HINT: Use the `load_data()` function to read the JSON content of the file.
 #       This will return a dictionary containing all matched & non-matched features.
 
-# geojson_data = ...
+geojson_data = load_data(input_geojson_file)
 
 ###############################
 # 3) Split data between matched and non-matched entries
@@ -31,21 +30,24 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 # Your goal is to **separate** these two categories.
 
 # Extract the list of features from the GeoJSON data
-# features = ...
+features = geojson_data.get("features", None)
 
 # Initialize lists to store:
-# - `nolli_data`: All Nolli features (both matched and non-matched)
-# - `matched_data`: Only matched Nolli entries
-# - `matched_ids`: The list of Nolli IDs that have been successfully matched
+non_matched_data = []
 
-# for each feature in features:
-#    Extract the properties dictionary
-#    Check if some useful key is present in the properties
-#    If that key exists:
-#       - Append to `matched_data`
-#       - Store the `Nolli_ID` in `matched_ids`
-#    Otherwise:
-#       - Append to `nolli_data`
+for i in features:
+    properties = i.get("properties", None)
+    ifmatched = properties.get("Matched_Name", None)
+    if ifmatched == None:
+        add_props = {
+            "Nolli_ID" : properties.get("Nolli_ID", None),
+            "Nolli_Name" : properties.get("Nolli_Name", None),
+        }
+        non_matched_data.append({
+            "type" : "Feature",
+            "properties" : add_props,
+            "geometry" : i.get("geometry", None)
+        })
 
 ###############################
 # 4) Filter out only the non-matched Nolli entries
@@ -53,6 +55,7 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 # HINT: Now, filter `nolli_data` to **retain only** the Nolli features
 #       that were **not previously matched**.
 #
+
 # Use the `matched_ids` list to check whether each Nolli feature is already matched.
 
 # non_matched_data = []
@@ -72,12 +75,25 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 # Use:
 # - The proper functions to extract and load the OSM data from file
 
-# zip_file = "..."
+#zip_file = "/workspaces/geographic-coordinates-match-HultzHubbard/gottamatch-emall/geojson_data.zip"
 
 # Extract
 
-# Load the OSM features dataset
-# osm_features = ...
+#geojson_files = ["nolli_points_open.geojson", "osm_node_way_relation.geojson"]
+
+# extract_files(zip_file, geojson_files)
+
+osm_file = load_data("/workspaces/geographic-coordinates-match-HultzHubbard/reverse-lookup/osm_node_way_relation.geojson")
+
+modernFeatures = osm_file.get("features", None)
+modernBuildings = []
+
+for element in modernFeatures:
+    modernBuildings.append({
+        "type" : "Feature",
+        "properties" : element.get("properties", None),
+        "geometry" : element.get("geometry", None)
+    })
 
 ###############################
 # 6) Find the closest OSM match for each non-matched Nolli entry
@@ -93,7 +109,7 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 #       Keep the use_geodesic flag to False, otherwise it will take too much time.
 #
 
-# matches = find_closest_matches(...)
+matches = find_closest_matches(non_matched_data, modernBuildings)
 
 ###############################
 # 7) Save the new matches to JSON
@@ -104,6 +120,7 @@ from utils import extract_files, load_data, save_to_json, print_dict, find_close
 
 # To convert it to GeoJSON format, use the convert_to_geojson(...) function
 
+convert_to_geojson(matches, "geometry_matched_nolli_features.geojson")
 
 ###############################
 # 8) Assignment Submission & Next Steps
